@@ -28,7 +28,7 @@ def test_ebola_date():
         app,
         [
             "data/ebola.xml",
-            "data/ebola.fasta",
+            "data/ebola1.fasta",
             "--output",
             "ebola.xml",
         ],
