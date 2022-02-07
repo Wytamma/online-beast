@@ -66,7 +66,7 @@ def add_node_to_tree(tree, nearest_seq_id, name=None):
     return clade.clades[1]
 
 
-def add_new_tree_to_state_file(tree, state_file, sate_output):
+def add_new_tree_to_state_file(tree, state_file, output):
     writer = Phylo.NewickIO.Writer([tree])
 
     newick_tree = next(writer.to_strings(format_branch_length="%1.17f"))
@@ -80,8 +80,8 @@ def add_new_tree_to_state_file(tree, state_file, sate_output):
     closting_tag = old_tree_line.split("</")[-1]
 
     state_file_lines[1] = f"{opening_tag}>{newick_tree}</{closting_tag}"
-    if sate_output:
-        state_file = sate_output
+    if output:
+        state_file = Path(f"{output}.state")
     with open(state_file, "w") as f:
         f.writelines(state_file_lines)
     return state_file
@@ -144,10 +144,8 @@ def main(
         tree = Phylo.read(StringIO(newick_tree), "newick")
         new_clade = add_node_to_tree(tree, closest_seq_id, name=sequence.id)
         Phylo.draw_ascii(tree)
-        new_clade.name = str(len(MSA))
-        state_file = add_new_tree_to_state_file(
-            tree, state_file, Path(f"{output}.state")
-        )
+        new_clade.name = str(len(tree.get_terminals()) - 1)
+        state_file = add_new_tree_to_state_file(tree, state_file, output=output)
         xml_file = add_new_sequence_to_xml(
             xml_file, sequence.seq, sequence.id, output, dateFormat, deliminator
         )
