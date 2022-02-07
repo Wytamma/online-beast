@@ -30,7 +30,7 @@ The analysis can then be resumed (with the additional sequence data) using the B
 beast -resume testGTR.xml
 ```
 
-The online analysis can be visualised using [Beastiary](https://beastiary.wytamma.com/). The jumps in the trace show where new sequences have been added. 
+The online analysis can be visualised in real-time using [Beastiary](https://beastiary.wytamma.com/). The jumps in the trace show where new sequences have been added. 
 
 ![](images/beastiary.png)
 
