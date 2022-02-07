@@ -125,4 +125,6 @@ def main(
         Phylo.draw_ascii(tree)
         new_clade.name = str(len(MSA))
         state_file = add_new_tree_to_state_file(tree, state_file, sate_output)
-        xml_file = add_new_sequence_to_xml(xml_file, sequence.seq, sequence.id, xml_output)
+        xml_file = add_new_sequence_to_xml(
+            xml_file, sequence.seq, sequence.id, xml_output
+        )

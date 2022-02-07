@@ -22,9 +22,9 @@ def test_app():
             "--xml-output",
             "testGTR.xml",
             "--sate-output",
-            "testGTR.xml.state"
+            "testGTR.xml.state",
         ],
     )
     assert result.exit_code == 0
-    os.remove('testGTR.xml')
-    os.remove('testGTR.xml.state')
+    os.remove("testGTR.xml")
+    os.remove("testGTR.xml.state")
