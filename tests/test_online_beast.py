@@ -21,3 +21,18 @@ def test_app():
     assert result.exit_code == 0
     os.remove("testGTR.xml")
     os.remove("testGTR.xml.state")
+
+
+def test_ebola_date():
+    result = runner.invoke(
+        app,
+        [
+            "data/ebola.xml",
+            "data/ebola.fasta",
+            "--output",
+            "ebola.xml",
+        ],
+    )
+    assert result.exit_code == 0
+    os.remove("ebola.xml")
+    os.remove("ebola.xml.state")

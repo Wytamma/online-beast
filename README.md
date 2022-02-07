@@ -46,11 +46,37 @@ If you use the BEAST2 `-statefile` flag to specify the filename of the state (i.
 online-beast testGTR.xml samples.fasta --state-file beast.state 
 ```
 
+Date trait data will be automatically parsed. The format of the date trait data (in the fasta descriptor) can be set with the `--dateformat` (default `%d/%m/%Y`) and `--deliminator` (default `_`) flags. 
+
+```
+online-beast data/ebola.xml data/ebola.fasta --dateformat %d/%m/%Y --deliminator _
+```
+
 ## Explanation
 
-Online-beast loosely follows the implementation of [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false) for BEAST1. However, most of the implementation of online-beast is handle by the default state system in BEAST2. Sequences are added to the latest tree in the state file. New sequences are added from the fasta file one at a time. The pairwise distance is calculated between the new sequence and all the other sequences in the XML file. The new sequence is grafted onto the tree in the `.state` file half way along the branch of the closest sequence in the XML file. The new sequence is append to the BEAST XML file. 
+Online-beast loosely follows the implementation of [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false) for BEAST1. However, most of the implementation of online-beast is handle by the default state system in BEAST2. Sequences are added to the latest tree in the state file. New sequences are added from the fasta file one at a time. The hamming distance is calculated between the new sequence and all the other sequences in the XML file. The new sequence is grafted onto the tree in the `.state` file half way along the branch of the closest sequence in the XML file. The new sequence is append to the BEAST XML file. 
+
+## Ebola Example 
+
+In this example we will make use of a publicly available dataset of sequences from the 2013-2016 *Zaire ebolavirus* outbreak in Sierra Leone. 
+
+In the `data/` folder you'll find a `ebola.xml` file and several fasta files that contain sequences from the outbreak broken up by date. The script below will run an online Bayesian phylodynamic analysis added new sequences after each run finishes. 
 
 
+```bash
+#!/bin/bash
+
+# Run beast with initial samples
+beast ebola.xml 
+
+for FASTA_FILE in $(ls data/samples*.fasta)
+do  
+    # Update analysis with new samples in each fasta file
+    online-beast ebola.xml $FASTA_FILE
+    # Resume the analysis
+    beast -resume ebola.xml 
+done
+```
 
 
 

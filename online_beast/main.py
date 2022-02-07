@@ -6,6 +6,7 @@ from Bio.Seq import Seq
 import xml.etree.ElementTree as ET
 import typer
 from Bio.Align import MultipleSeqAlignment, PairwiseAligner
+from datetime import datetime
 
 app = typer.Typer()
 
@@ -37,13 +38,17 @@ def find_closest_sequence(MSA: MultipleSeqAlignment, new_sequence):
     aligner = PairwiseAligner()
     max_score = 0
     seq_id = None
-    for i, sequence in enumerate(MSA):
-        score = aligner.score(
-            sequence.seq.replace("-", ""), new_sequence.replace("-", "")
-        )
-        if score > max_score:
-            max_score = score
-            seq_id = i
+    with typer.progressbar(MSA) as progress:
+        for i, sequence in enumerate(progress):
+            score = sum(
+                xi != yi for xi, yi in zip(str(sequence.seq), str(new_sequence))
+            )
+            if not max_score:
+                max_score = score
+                seq_id = i
+            elif score < max_score:
+                max_score = score
+                seq_id = i
     if seq_id == "None":
         raise Exception("No Seq found?")
     return seq_id, max_score
@@ -82,7 +87,9 @@ def add_new_tree_to_state_file(tree, state_file, sate_output):
     return state_file
 
 
-def add_new_sequence_to_xml(xml_file, sequence, seq_id, xml_output):
+def add_new_sequence_to_xml(
+    xml_file, sequence, seq_id, xml_output, dateFormat, deliminator
+):
     xml_tree = ET.parse(xml_file)
     data = xml_tree.find("data")
     sequence_el = ET.Element(
@@ -90,6 +97,19 @@ def add_new_sequence_to_xml(xml_file, sequence, seq_id, xml_output):
         {"id": f"seq_{seq_id}", "taxon": seq_id, "totalcount": "4", "value": sequence},
     )
     data.append(sequence_el)
+    trait = xml_tree.find(".//*[@traitname='date']")
+    if trait:
+        date = None
+        for potential_date_trait in seq_id.split(deliminator):
+            try:
+                date = datetime.strptime(potential_date_trait, dateFormat).strftime(
+                    dateFormat
+                )
+            except:
+                pass
+        if date:
+            typer.echo(f"Adding date data: {date}")
+            trait.set("value", f"{trait.get('value')},{seq_id}={date}")
     if xml_output:
         xml_file = xml_output
     xml_tree.write(xml_file)
@@ -104,7 +124,12 @@ def get_sequences_to_add(MSA, new_seq_MSA_fasta):
 
 @app.command()
 def main(
-    xml_file: Path, fasta_file: Path, state_file: Path = None, output: Path = None
+    xml_file: Path,
+    fasta_file: Path,
+    state_file: Path = None,
+    output: Path = None,
+    dateFormat: str = "%d/%m/%Y",
+    deliminator: str = "_",
 ):
     MSA = get_MSA_from_xml(xml_file)
     sequences_to_add = get_sequences_to_add(MSA, fasta_file)
@@ -123,4 +148,6 @@ def main(
         state_file = add_new_tree_to_state_file(
             tree, state_file, Path(f"{output}.state")
         )
-        xml_file = add_new_sequence_to_xml(xml_file, sequence.seq, sequence.id, output)
+        xml_file = add_new_sequence_to_xml(
+            xml_file, sequence.seq, sequence.id, output, dateFormat, deliminator
+        )
