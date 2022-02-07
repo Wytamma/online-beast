@@ -1,1 +1,8 @@
 .pre-commit-config.yaml
+/.pytest_cache
+/dist
+/*.pyc
+*.pyc
+*/__pycache__/*
+.DS_Store
+__pycache__
