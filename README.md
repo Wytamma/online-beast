@@ -3,7 +3,7 @@
 [![tests](https://github.com/Wytamma/online-beast/actions/workflows/test.yml/badge.svg)](https://github.com/Wytamma/online-beast/actions/workflows/test.yml)
 [![cov](https://codecov.io/gh/Wytamma/online-beast/branch/master/graph/badge.svg)](https://codecov.io/gh/Wytamma/online-beast)
 
-This command line tool can be used to add sequences to an ongoing analysis in BEAST2 analysis. This framework is called online Bayesian phylodynamic inference (see [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false)).
+This command line tool can be used to add sequences to an ongoing analysis in BEAST2. This framework is called online Bayesian phylodynamic inference (see [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false)).
 
 ## Install
 Install `online-beast` with pip (requires python -V >= 3.6.2).
