@@ -104,11 +104,7 @@ def get_sequences_to_add(MSA, new_seq_MSA_fasta):
 
 @app.command()
 def main(
-    xml_file: Path,
-    fasta_file: Path,
-    state_file: Path = None,
-    xml_output: Path = None,
-    sate_output: Path = None,
+    xml_file: Path, fasta_file: Path, state_file: Path = None, output: Path = None
 ):
     MSA = get_MSA_from_xml(xml_file)
     sequences_to_add = get_sequences_to_add(MSA, fasta_file)
@@ -124,7 +120,7 @@ def main(
         new_clade = add_node_to_tree(tree, closest_seq_id, name=sequence.id)
         Phylo.draw_ascii(tree)
         new_clade.name = str(len(MSA))
-        state_file = add_new_tree_to_state_file(tree, state_file, sate_output)
-        xml_file = add_new_sequence_to_xml(
-            xml_file, sequence.seq, sequence.id, xml_output
+        state_file = add_new_tree_to_state_file(
+            tree, state_file, Path(f"{output}.state")
         )
+        xml_file = add_new_sequence_to_xml(xml_file, sequence.seq, sequence.id, output)
