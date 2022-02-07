@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "online-beast"
+version = "0.1.0"
+description = ""
+authors = ["Wytamma Wirth <wytamma.wirth@me.com>"]
+readme = "README.md"
+
+[tool.poetry.scripts]
+online-beast = "online_beast.main:app"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+typer = {extras = ["all"], version = "^^0.4.0"}
+biopython = "^1.79"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^22.1.0"
+pytest-cov = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
