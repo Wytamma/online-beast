@@ -3,7 +3,7 @@
 [![tests](https://github.com/Wytamma/online-beast/actions/workflows/test.yml/badge.svg)](https://github.com/Wytamma/online-beast/actions/workflows/test.yml)
 [![cov](https://codecov.io/gh/Wytamma/online-beast/branch/master/graph/badge.svg)](https://codecov.io/gh/Wytamma/online-beast)
 
-This command line tool can be used to add sequences to an ongoing analysis in BEAST2 analysis. This framework is called online Bayesian phylodynamic inference (see [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false)).
+This command line tool can be used to add sequences to an ongoing analysis in BEAST2. This framework is called online Bayesian phylodynamic inference (see [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false)).
 
 ## Install
 Install `online-beast` with pip (requires python -V >= 3.6.2).
@@ -14,7 +14,7 @@ pip install online-beast
 
 ## Usage 
 
-Give `online-beast` beast the path to a xml file from an previous BEAST run (i.e. one that have been stopped/killed/crashed) and a fasta of sequence to add to the analysis. Sequences in the fasta file must be aligned and the same length as the other sequences in the XML file. Only new sequences (new descriptors) will be added to the analysis, so new sequences can be append to the fasta file as they are acquired. 
+Give `online-beast` beast the path to a XML file from a previous BEAST2 run (i.e. one that have been stopped/killed/crashed) and a fasta file of sequences to add to the analysis. Sequences in the fasta file must be aligned (i.e. to the sequences in the XML file) and the same length as the other sequences in the XML file. Only new sequences (new descriptors) will be added to the analysis, so new sequences can be append to the fasta file as they are acquired. 
 
 ```bash
 online-beast data/testGTR.xml data/samples.fasta
@@ -30,7 +30,7 @@ The analysis can then be resumed (with the additional sequence data) using the B
 beast -resume testGTR.xml
 ```
 
-The online analysis can be visualised using [Beastiary](https://beastiary.wytamma.com/). The jumps in the trace show where new sequences have been added. 
+The online analysis can be visualised in real-time using [Beastiary](https://beastiary.wytamma.com/). The jumps in the trace show where new sequences have been added. 
 
 ![](images/beastiary.png)
 
@@ -54,9 +54,7 @@ online-beast data/ebola.xml data/ebola.fasta --dateformat %d/%m/%Y --deliminator
 
 ## Explanation
 
-Online-beast loosely follows the implementation of [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false) for BEAST1. However, most of the implementation of online-beast is handle by the default state system in BEAST2. Sequences are added to the latest tree in the state file. New sequences are added from the fasta file one at a time. The hamming distance is calculated between the new sequence and all the other sequences in the XML file. The new sequence is grafted onto the tree in the `.state` file half way along the branch of the closest sequence in the XML file. The new sequence is append to the BEAST XML file. 
-
-## Ebola Example 
+Online-beast loosely follows the implementation of [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false) for BEAST1. However, most of the implementation of online-beast is handled by the default state system in BEAST2. New sequences are added from the fasta file one at a time. The pairwise distance is calculated between the new sequence and all the other sequences in the XML file. The new sequence is grafted onto the tree in the `.state` file, half way along the branch of the closest sequence in the XML file. The new sequence is append to the BEAST XML file. 
 
 In this example we will make use of a publicly available dataset of sequences from the 2013-2016 *Zaire ebolavirus* outbreak in Sierra Leone. 
 
