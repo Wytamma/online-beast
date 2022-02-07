@@ -14,7 +14,7 @@ pip install online-beast
 
 ## Usage 
 
-Give `online-beast` beast the path to a xml file from an previous BEAST run (i.e. one that have been stopped/killed/crashed) and a fasta of sequence to add to the analysis. Sequences in the fasta file must be aligned and the same length as the other sequences in the XML file. Only new sequences (new descriptors) will be added to the analysis, so new sequences can be append to the fasta file as they are acquired. 
+Give `online-beast` beast the path to a XML file from a previous BEAST2 run (i.e. one that have been stopped/killed/crashed) and a fasta file of sequences to add to the analysis. Sequences in the fasta file must be aligned (i.e. to the sequences in the XML file) and the same length as the other sequences in the XML file. Only new sequences (new descriptors) will be added to the analysis, so new sequences can be append to the fasta file as they are acquired. 
 
 ```bash
 online-beast data/testGTR.xml data/samples.fasta
