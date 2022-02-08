@@ -34,7 +34,13 @@ The online analysis can be visualised in real-time using [Beastiary](https://bea
 
 ![](images/beastiary.png)
 
-By default the new sequences will be appended to the input XML and Sate files. Output file names can be specified using the `--output` flag. This will also create a new `.state` file.
+If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `date` trait from `sample_2022-04-05` your would use `--trait 'date _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
+
+```bash
+online-beast ebola.xml data/ebola2.fasta --trait 'date _ 1' --output ebola.xml
+```
+
+By default the new sequences will be appended to the input XML and state files. Output file names can be specified using the `--output` flag. This will also create a new `.state` file.
 
 ```bash
 online-beast testGTR.xml samples.fasta --output new_testGTR.xml 
@@ -45,8 +51,6 @@ If you use the BEAST2 `-statefile` flag to specify the filename of the state (i.
 ```bash
 online-beast testGTR.xml samples.fasta --state-file beast.state 
 ```
-
-If there is trait data in the XMl file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `date` trait from `sample_2022-04-05` your would use `--trait 'date _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
 
 ## Explanation
 

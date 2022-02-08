@@ -9,14 +9,14 @@ from Bio.Seq import Seq
 class BeastXML:
     """Class for editing BEAST XML files."""
 
-    file_name: str
+    file_name: Path
     traits: list
     xml: ElementTree  # what is?
 
     def __init__(
         self,
         file_name: Path,
-        traits: list[dict] = [{"traitname": "date", "deliminator": "_", "group": 1}],
+        traits: list = [],
     ):
         self.file_name = file_name
         self.traits = traits
