@@ -46,11 +46,7 @@ If you use the BEAST2 `-statefile` flag to specify the filename of the state (i.
 online-beast testGTR.xml samples.fasta --state-file beast.state 
 ```
 
-Date trait data will be automatically parsed. The format of the date trait data (in the fasta descriptor) can be set with the `--dateformat` (default `%d/%m/%Y`) and `--deliminator` (default `_`) flags. 
-
-```
-online-beast data/ebola.xml data/ebola.fasta --dateformat %d/%m/%Y --deliminator _
-```
+If there is trait data in the XMl file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `date` trait from `sample_2022-04-05` your would use `--trait 'date _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
 
 ## Explanation
 
@@ -69,15 +65,15 @@ In the `data/` folder you'll find a `ebola.xml` file and several fasta files tha
 # Run beast with initial samples
 beast data/ebola.xml 
 # Update analysis with new samples
-online-beast data/ebola.xml data/ebola1.fasta --state-file ebola.xml.state --output ebola.xml
+online-beast data/ebola.xml data/ebola1.fasta --trait 'date _ 1' --state-file ebola.xml.state --output ebola.xml
 # Resume the analysis
 beast -resume ebola.xml 
 # Update analysis with new samples
-online-beast ebola.xml data/ebola2.fasta --output ebola.xml
+online-beast ebola.xml data/ebola2.fasta --trait 'date _ 1' --output ebola.xml
 # Resume the analysis
 beast -resume ebola.xml 
 # Update analysis with new samples
-online-beast ebola.xml data/ebola3.fasta --output ebola.xml
+online-beast ebola.xml data/ebola3.fasta --trait 'date _ 1' --output ebola.xml
 # Resume the analysis
 beast -resume ebola.xml 
 ```

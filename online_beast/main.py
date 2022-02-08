@@ -1,44 +1,20 @@
-from io import StringIO
 from pathlib import Path
-from Bio import Phylo, SeqIO
-from Bio.SeqRecord import SeqRecord
+from Bio import SeqIO
 from Bio.Seq import Seq
-import xml.etree.ElementTree as ET
+from Bio.Align import MultipleSeqAlignment
 import typer
-from Bio.Align import MultipleSeqAlignment, PairwiseAligner
-from datetime import datetime
+from typing import List, Optional, Tuple
+
+from .xml import BeastXML
+from .state import StateFile
 
 app = typer.Typer()
 
 
-def get_MSA_from_xml(xml_file: Path) -> MultipleSeqAlignment:
-    align = MultipleSeqAlignment([])
-    data = ET.parse(xml_file).find("data")
-    for sequence_el in data:
-        align.append(
-            SeqRecord(
-                Seq(sequence_el.get("value")),
-                id=sequence_el.get("taxon"),
-                description="",
-            )
-        )
-    return align
-
-
-def get_tree_from_state_file(state_file: Path):
-    with open(state_file) as f:
-        lines = f.readlines()
-
-    tree = lines[1]
-
-    return tree.split(">")[1].split("</")[0]
-
-
-def find_closest_sequence(MSA: MultipleSeqAlignment, new_sequence):
-    aligner = PairwiseAligner()
+def find_closest_sequence(sequences_from_xml: MultipleSeqAlignment, new_sequence: Seq):
     max_score = None
     seq_id = None
-    with typer.progressbar(MSA) as progress:
+    with typer.progressbar(sequences_from_xml) as progress:
         for i, sequence in enumerate(progress):
             score = sum(
                 xi != yi for xi, yi in zip(str(sequence.seq), str(new_sequence))
@@ -54,72 +30,9 @@ def find_closest_sequence(MSA: MultipleSeqAlignment, new_sequence):
     return seq_id, max_score
 
 
-def add_node_to_tree(tree, nearest_seq_id, name=None):
-    clade = next(c for c in tree.get_terminals() if c.name == str(nearest_seq_id))
-    clade.branch_length = clade.branch_length / 2
-    clade.split(branch_length=clade.branch_length)
-    clade.confidence = 1
-    clade.clades[0].name = str(nearest_seq_id)
-    if name:
-        clade.clades[1].name = name
-    clade.name = None
-    return clade.clades[1]
-
-
-def add_new_tree_to_state_file(tree, state_file, output):
-    writer = Phylo.NewickIO.Writer([tree])
-
-    newick_tree = next(writer.to_strings(format_branch_length="%1.17f"))
-
-    with open(state_file) as f:
-        state_file_lines = f.readlines()
-
-    old_tree_line = state_file_lines[1]
-
-    opening_tag = old_tree_line.split(">")[0]
-    closting_tag = old_tree_line.split("</")[-1]
-
-    state_file_lines[1] = f"{opening_tag}>{newick_tree}</{closting_tag}"
-    if output:
-        state_file = Path(f"{output}.state")
-    with open(state_file, "w") as f:
-        f.writelines(state_file_lines)
-    return state_file
-
-
-def add_new_sequence_to_xml(
-    xml_file, sequence, seq_id, xml_output, dateFormat, deliminator
-):
-    xml_tree = ET.parse(xml_file)
-    data = xml_tree.find("data")
-    sequence_el = ET.Element(
-        "sequence",
-        {"id": f"seq_{seq_id}", "taxon": seq_id, "totalcount": "4", "value": sequence},
-    )
-    data.append(sequence_el)
-    trait = xml_tree.find(".//*[@traitname='date']")
-    if trait:
-        date = None
-        for potential_date_trait in seq_id.split(deliminator):
-            try:
-                date = datetime.strptime(potential_date_trait, dateFormat).strftime(
-                    dateFormat
-                )
-            except:
-                pass
-        if date:
-            typer.echo(f"Adding date data: {date}")
-            trait.set("value", f"{trait.get('value')},{seq_id}={date}")
-    if xml_output:
-        xml_file = xml_output
-    xml_tree.write(xml_file)
-    return xml_file
-
-
-def get_sequences_to_add(MSA, new_seq_MSA_fasta):
-    records = SeqIO.parse(new_seq_MSA_fasta, "fasta")
-    MSA_Ids = [s.id for s in MSA]
-    return [record for record in records if record.id not in MSA_Ids]
+def get_sequences_to_add(fasta_file, list_of_seq_ids: list):
+    records = SeqIO.parse(fasta_file, "fasta")
+    return [record for record in records if record.id not in list_of_seq_ids]
 
 
 @app.command()
@@ -128,24 +41,44 @@ def main(
     fasta_file: Path,
     state_file: Path = None,
     output: Path = None,
-    dateFormat: str = "%d/%m/%Y",
-    deliminator: str = "_",
+    trait: Optional[List[str]] = typer.Option(
+        None,
+        help="Trait information 'traitname deliminator group' string seperated by spaces",
+    ),
 ):
-    MSA = get_MSA_from_xml(xml_file)
-    sequences_to_add = get_sequences_to_add(MSA, fasta_file)
+    if not state_file:
+        state_file = Path(f"{xml_file}.state")
+    state_tree = StateFile(state_file)
+    traits = [
+        {
+            "traitname": t.split(" ")[0],
+            "deliminator": t.split(" ")[0],
+            "group": int(t.split(" ")[2]),
+        }
+        for t in trait
+    ]
+
+    beast_xml = BeastXML(xml_file, traits)
+
+    sequences_to_add = get_sequences_to_add(fasta_file, beast_xml.get_sequence_ids())
+
+    if not sequences_to_add:
+        typer.echo("No new sequences found in the fasta file.")
+        raise typer.Exit(code=1)
+
     for sequence in sequences_to_add:
         typer.echo(f"Adding new sequence: {sequence.id}")
-        if len(sequence) != MSA.get_alignment_length():
+        if len(sequence) != beast_xml.alignment.get_alignment_length():
             raise ValueError("Sequences must all be the same length")
-        closest_seq_id, max_score = find_closest_sequence(MSA, sequence.seq)
-        if not state_file:
-            state_file = Path(f"{xml_file}.state")
-        newick_tree = get_tree_from_state_file(state_file)
-        tree = Phylo.read(StringIO(newick_tree), "newick")
-        new_clade = add_node_to_tree(tree, closest_seq_id, name=sequence.id)
-        Phylo.draw_ascii(tree)
-        new_clade.name = str(len(tree.get_terminals()) - 1)
-        state_file = add_new_tree_to_state_file(tree, state_file, output=output)
-        xml_file = add_new_sequence_to_xml(
-            xml_file, sequence.seq, sequence.id, output, dateFormat, deliminator
+        closest_seq_id, max_score = find_closest_sequence(
+            beast_xml.alignment, sequence.seq
         )
+        new_clade = state_tree.graft(closest_seq_id)
+        name = new_clade.name
+        new_clade.name = sequence.id
+        state_tree.draw()
+        new_clade.name = name
+        beast_xml.add_sequence(sequence)
+
+    beast_xml.write(out_file=output)
+    state_tree.write(out_file=output)
