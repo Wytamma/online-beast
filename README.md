@@ -34,7 +34,7 @@ The online analysis can be visualised in real-time using [Beastiary](https://bea
 
 ![](images/beastiary.png)
 
-If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `date` trait from `sample_2022-04-05` your would use `--trait 'date _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
+If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `date` trait from `sample_2022-04-05` you would use `--trait 'date _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
 
 ```bash
 online-beast ebola.xml data/ebola2.fasta --trait 'date _ 1' --output ebola.xml
