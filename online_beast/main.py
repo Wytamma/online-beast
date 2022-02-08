@@ -36,7 +36,7 @@ def get_tree_from_state_file(state_file: Path):
 
 def find_closest_sequence(MSA: MultipleSeqAlignment, new_sequence):
     aligner = PairwiseAligner()
-    max_score = 0
+    max_score = None
     seq_id = None
     with typer.progressbar(MSA) as progress:
         for i, sequence in enumerate(progress):
