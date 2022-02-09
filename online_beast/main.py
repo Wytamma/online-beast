@@ -6,7 +6,7 @@ import typer
 from typing import List, Optional, Tuple
 
 from .xml import BeastXML
-from .state import StateFile
+from .state import StateTree
 
 app = typer.Typer()
 
@@ -51,7 +51,7 @@ def main(
 ):
     if not state_file:
         state_file = Path(f"{xml_file}.state")
-    state_tree = StateFile(state_file)
+    state_tree = StateTree(state_file)
     traits = [
         {
             "traitname": t.split(" ")[0],

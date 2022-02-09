@@ -3,7 +3,7 @@ from Bio import Phylo
 from io import StringIO
 
 
-class StateFile:
+class StateTree:
     """Class for editing BEAST state files."""
 
     file_name: str
