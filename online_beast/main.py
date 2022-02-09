@@ -92,7 +92,7 @@ def main(
             beast_xml.alignment, sequence.seq
         )
 
-        sampling_time_delta = None
+        sampling_time_delta = 0
         if date_trait:
             closest_tree_node_date = beast_xml.get_trait_data(
                 beast_xml.alignment[closest_tree_node_id].id, traitname="date"

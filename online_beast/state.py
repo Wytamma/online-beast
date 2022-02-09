@@ -30,7 +30,7 @@ class StateTree:
         return node_path[-2]
 
     def graft(
-        self, branch_id, sampling_time_delta: float = None, graft_point: float = 0.5
+        self, branch_id, sampling_time_delta: float = 0, graft_point: float = 0.5
     ):
         clade = next(c for c in self.tree.get_terminals() if c.name == str(branch_id))
         if not clade:
@@ -38,8 +38,18 @@ class StateTree:
         total_branch_length = clade.branch_length
 
         running_total = total_branch_length
-        if running_total + sampling_time_delta < 0:
-            raise ValueError("negative branch bad :( - add less samples?")
+        internal = False
+        if total_branch_length + sampling_time_delta < 0:
+            while total_branch_length + sampling_time_delta < 0:
+                try:
+                    clade = self.get_parent(clade)
+                except IndexError:
+                    # root
+                    break
+                internal = True
+                total_branch_length += clade.branch_length
+
+            # raise ValueError("negative branch bad :( - add less samples?")
             # need to write while loop to find parent node that works
 
         if sampling_time_delta <= 0:
@@ -47,19 +57,30 @@ class StateTree:
                 total_branch_length - abs(sampling_time_delta)
             ) * graft_point
             clade.branch_length = parent_branch_length
-            clade.split(branch_length=total_branch_length - parent_branch_length)
+            branch_length = total_branch_length - parent_branch_length
         else:
             parent_branch_length = (total_branch_length) * graft_point
             clade.branch_length = parent_branch_length
-            clade.split(branch_length=total_branch_length - parent_branch_length)
+            branch_length = total_branch_length - parent_branch_length
 
-        clade.confidence = 1
+        if internal:
+            descendants = 1
+        else:
+            descendants = 2
+        clade.split(n=descendants, branch_length=branch_length)
         clade.name = None
-        original_branch, new_branch = clade.clades
-        original_branch.name = str(branch_id)
+
+        if not internal:
+            original_branch = clade.clades[0]
+            original_branch.name = str(branch_id)
+
+        new_branch = clade.clades[-1]
         new_branch.name = str(len(self.tree.get_terminals()) - 1)  # zero indexed
         if sampling_time_delta:
             if new_branch.branch_length + sampling_time_delta < 0:
+                new_branch.name = "new_branch"
+                self.draw()
+                print(self.tree)
                 raise ValueError("negative branch bad :(")
             new_branch.branch_length = new_branch.branch_length + sampling_time_delta
         return new_branch
