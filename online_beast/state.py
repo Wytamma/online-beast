@@ -25,20 +25,43 @@ class StateTree:
         writer = Phylo.NewickIO.Writer([self.tree])
         return next(writer.to_strings(format_branch_length="%1.17f"))
 
-    def graft(self, branch_id, graft_point: float = 0.5, branch_length: float = None):
+    def get_parent(self, child_clade):
+        node_path = self.tree.get_path(child_clade)
+        return node_path[-2]
+
+    def graft(
+        self, branch_id, sampling_time_delta: float = None, graft_point: float = 0.5
+    ):
         clade = next(c for c in self.tree.get_terminals() if c.name == str(branch_id))
         if not clade:
             raise ValueError("Could not find branch with id", branch_id)
         total_branch_length = clade.branch_length
-        clade.branch_length = total_branch_length * graft_point
-        clade.split(branch_length=total_branch_length * (1 - graft_point))
+
+        running_total = total_branch_length
+        if running_total + sampling_time_delta < 0:
+            raise ValueError("negative branch bad :( - add less samples?")
+            # need to write while loop to find parent node that works
+
+        if sampling_time_delta <= 0:
+            parent_branch_length = (
+                total_branch_length - abs(sampling_time_delta)
+            ) * graft_point
+            clade.branch_length = parent_branch_length
+            clade.split(branch_length=total_branch_length - parent_branch_length)
+        else:
+            parent_branch_length = (total_branch_length) * graft_point
+            clade.branch_length = parent_branch_length
+            clade.split(branch_length=total_branch_length - parent_branch_length)
+
         clade.confidence = 1
         clade.name = None
         original_branch, new_branch = clade.clades
         original_branch.name = str(branch_id)
-        new_branch.name = str(len(self.tree.get_terminals()) - 1)
-        if branch_length:
-            new_branch.branch_length = branch_length
+        new_branch.name = str(len(self.tree.get_terminals()) - 1)  # zero indexed
+        if sampling_time_delta:
+            if new_branch.branch_length + sampling_time_delta < 0:
+                raise ValueError("negative branch bad :(")
+            new_branch.branch_length = new_branch.branch_length + sampling_time_delta
         return new_branch
 
     def draw(self):

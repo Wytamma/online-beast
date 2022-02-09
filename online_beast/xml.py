@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 from Bio.Align import MultipleSeqAlignment
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ElementTree
@@ -11,8 +12,8 @@ class BeastXML:
     """Class for editing BEAST XML files."""
 
     file_name: Path
-    traits: list
-    xml: ElementTree  # what is?
+    traits: List[dict]
+    xml: ElementTree
     date_trait: bool
     date_format: str
     date_deliminator: str
@@ -20,23 +21,26 @@ class BeastXML:
     def __init__(
         self,
         file_name: Path,
-        traits: list = [],
+        traits: List[dict] = [],
         date_trait: bool = True,
         date_format: str = "%Y-%m-%d",
         date_deliminator: str = "_",
     ):
         self.file_name = file_name
-        self.traits = traits
         self.xml = self._load_xml()
+        self.traits = traits
+        for trait in traits:
+            try:
+                self._get_first_element_by_attribute("traitname", trait)
+            except ValueError:
+                raise ValueError(f"Could not find '{trait}' trait in xml.")
         # should check to see if there are traits in the xml
-        # that are not in self.traits.
+        # that are not in self.traits?
         if date_trait:
             try:
                 self._get_first_element_by_attribute("traitname", "date")
             except ValueError:
-                raise ValueError(
-                    f"Could not find date trait (use --no-date-trait flag?)."
-                )
+                raise ValueError(f"Could not find 'date' trait in xml..")
         self.date_trait = date_trait
         self.date_format = date_format
         self.date_deliminator = date_deliminator
@@ -50,26 +54,10 @@ class BeastXML:
             raise ValueError(f"Could not find trait with {attr}='{value}'")
         return el
 
-    def _add_trait(self, sequence_id, traitname, deliminator, group):
+    def _add_trait(self, sequence_id, traitname):
         trait_el = self._get_first_element_by_attribute("traitname", traitname)
-        trait = sequence_id.split(deliminator)[group]
+        trait = self.get_trait_data(sequence_id, traitname)
         trait_el.set("value", f"{trait_el.get('value')},{sequence_id}={trait}")
-
-    def _add_date_trait(self, sequence_id):
-        date_el = self._get_first_element_by_attribute("traitname", "date")
-        date = None
-        for potential_date in sequence_id.split(self.date_deliminator):
-            try:
-                date = datetime.strptime(potential_date, self.date_format).strftime(
-                    self.date_format
-                )
-            except ValueError:
-                pass
-        if not date:
-            raise ValueError(
-                f"Could not parse date trait with format '{self.date_format}' and deliminator '{self.date_deliminator}'"
-            )
-        date_el.set("value", f"{date_el.get('value')},{sequence_id}={date}")
 
     @property
     def alignment(self) -> MultipleSeqAlignment:
@@ -88,11 +76,31 @@ class BeastXML:
     def get_sequence_ids(self) -> list:
         return [s.id for s in self.alignment]
 
+    def get_trait_data(self, sequence_id, traitname):
+        if traitname == "date" and self.date_trait:
+            date = None
+            for potential_date in sequence_id.split(self.date_deliminator):
+                try:
+                    date = datetime.strptime(potential_date, self.date_format).strftime(
+                        self.date_format
+                    )
+                except ValueError:
+                    pass
+            if not date:
+                raise ValueError(
+                    f"Could not parse date trait with format '{self.date_format}' and deliminator '{self.date_deliminator}'"
+                )
+            return date
+
+        trait = next(t for t in self.traits if t["traitname"] == traitname)
+
+        return sequence_id.split(trait["deliminator"])[trait["group"]]
+
     def add_sequence(self, record: Seq):
         if self.date_trait:
-            self._add_date_trait(record.id)
+            self._add_trait(record.id, "date")
         for trait in self.traits:
-            self._add_trait(record.id, **trait)
+            self._add_trait(record.id, trait["traitname"])
         data = self.xml.find("data")
         sequence_el = ET.Element(
             "sequence",
