@@ -34,10 +34,16 @@ The online analysis can be visualised in real-time using [Beastiary](https://bea
 
 ![](images/beastiary.png)
 
-If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `date` trait from `sample_2022-04-05` you would use `--trait 'date _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
+Date trait data will be automatically parsed. The format of the date trait data (in the fasta descriptor) can be set with the `--date-format` (default `%Y-%m-%d`) and `--deliminator` (default `_`) flags. If there is no date trait in the xml use the `--no-date-trait` flag.
+
+```
+online-beast data/ebola.xml data/ebola.fasta --dateformat %d/%m/%Y --date-deliminator _
+```
+
+If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `location` trait from `sample_wuhan_2022-04-05` you would use `--trait 'location _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
 
 ```bash
-online-beast ebola.xml data/ebola2.fasta --trait 'date _ 1' --output ebola.xml
+online-beast covid.xml data/covid.fasta --trait 'location _ 1'
 ```
 
 By default the new sequences will be appended to the input XML and state files. Output file names can be specified using the `--output` flag. This will also create a new `.state` file.
@@ -69,15 +75,15 @@ In the `data/` folder you'll find a `ebola.xml` file and several fasta files tha
 # Run beast with initial samples
 beast data/ebola.xml 
 # Update analysis with new samples
-online-beast data/ebola.xml data/ebola1.fasta --trait 'date _ 1' --state-file ebola.xml.state --output ebola.xml
+online-beast data/ebola.xml data/ebola1.fasta --date-format "%d/%m/%Y" --state-file ebola.xml.state --output ebola.xml
 # Resume the analysis
 beast -resume ebola.xml 
 # Update analysis with new samples
-online-beast ebola.xml data/ebola2.fasta --trait 'date _ 1' --output ebola.xml
+online-beast ebola.xml data/ebola2.fasta --date-format "%d/%m/%Y" --output ebola.xml
 # Resume the analysis
 beast -resume ebola.xml 
 # Update analysis with new samples
-online-beast ebola.xml data/ebola3.fasta --trait 'date _ 1' --output ebola.xml
+online-beast ebola.xml data/ebola3.fasta --date-format "%d/%m/%Y" --output ebola.xml
 # Resume the analysis
 beast -resume ebola.xml 
 ```

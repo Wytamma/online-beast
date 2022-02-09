@@ -41,6 +41,9 @@ def main(
     fasta_file: Path,
     state_file: Path = None,
     output: Path = None,
+    date_trait: bool = True,
+    date_format: str = "%Y-%m-%d",
+    date_deliminator: str = "_",
     trait: Optional[List[str]] = typer.Option(
         None,
         help="Trait information 'traitname deliminator group' string seperated by spaces",
@@ -52,13 +55,19 @@ def main(
     traits = [
         {
             "traitname": t.split(" ")[0],
-            "deliminator": t.split(" ")[0],
+            "deliminator": t.split(" ")[1],
             "group": int(t.split(" ")[2]),
         }
         for t in trait
     ]
 
-    beast_xml = BeastXML(xml_file, traits)
+    beast_xml = BeastXML(
+        xml_file,
+        traits,
+        date_trait=date_trait,
+        date_format=date_format,
+        date_deliminator=date_deliminator,
+    )
 
     sequences_to_add = get_sequences_to_add(fasta_file, beast_xml.get_sequence_ids())
 

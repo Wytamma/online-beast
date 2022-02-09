@@ -16,6 +16,7 @@ def test_app():
             "data/testGTR.xml.state",
             "--output",
             "testGTR.xml",
+            "--no-date-trait",
         ],
     )
     assert result.exit_code == 0
@@ -31,6 +32,8 @@ def test_ebola_date():
             "data/ebola1.fasta",
             "--output",
             "ebola.xml",
+            "--date-format",
+            "%d/%m/%Y",
         ],
     )
     assert result.exit_code == 0
