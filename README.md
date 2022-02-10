@@ -60,7 +60,7 @@ online-beast testGTR.xml samples.fasta --state-file beast.state
 
 ## Explanation
 
-A Markov chain started anywhere near the center of the stationary distribution needs no burn-in ([Geyer 2011](http://www.mcmchandbook.net/)). Online Bayesian phylodynamic inference is akin to transfer learning in the deep learning field. By starting our MCMC with reasonable states we reduce the amount of optimisation (burn-in) that must be performed to reach convergence. 
+A Markov chain started anywhere near the center of the stationary distribution needs no burn-in ([Geyer 2011](http://www.mcmchandbook.net/)). Online Bayesian phylodynamic inference is akin to transfer learning in the deep learning field. By starting our MCMC with reasonable states (obtained from a previous run) we reduce the amount of optimisation (burn-in) that must be performed to reach convergence. 
 
 Online-beast loosely follows the implementation of [Gill et al., 2020](https://academic.oup.com/mbe/article/37/6/1832/5758268?login=false) for BEAST1. However, most of the implementation of online-beast is handled by the default state system in BEAST2. New sequences are added from the fasta file one at a time. The hamming distance is calculated between the new sequence and all the other sequences in the XML file. The new sequence is grafted onto the tree in the `.state` file, half way along the branch of the closest sequence in the XML file. The new sequence is append to the BEAST XML file. 
 
