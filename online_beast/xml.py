@@ -106,14 +106,17 @@ class BeastXML:
             "sequence",
             {
                 "id": f"seq_{record.id}",
+                "spec": "Sequence",
                 "taxon": record.id,
                 "totalcount": "4",
                 "value": record.seq,
             },
         )
+        sequence_el.tail = "\n"
         data.append(sequence_el)
 
     def write(self, out_file=None) -> None:
         if not out_file:
             out_file = self.file_name
+        ET.indent(self.xml, space="\t", level=0)
         self.xml.write(out_file)
