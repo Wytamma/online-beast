@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import List
 from Bio.Align import MultipleSeqAlignment
-import xml.etree.ElementTree as ET
+
+# import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from xml.etree.ElementTree import ElementTree
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -46,11 +48,11 @@ class BeastXML:
         self.date_deliminator = date_deliminator
 
     def _load_xml(self):
-        return ET.parse(self.file_name)
+        return ET.parse(str(self.file_name))
 
     def _get_first_element_by_attribute(self, attr, value):
         el = self.xml.find(f".//*[@{attr}='{value}']")
-        if not el:
+        if el is None:
             raise ValueError(f"Could not find trait with {attr}='{value}'")
         return el
 
@@ -88,7 +90,7 @@ class BeastXML:
                     pass
             if not date:
                 raise ValueError(
-                    f"Could not parse date trait with format '{self.date_format}' and deliminator '{self.date_deliminator}'"
+                    f"Could not parse date trait with date format '{self.date_format}' and date deliminator '{self.date_deliminator}'"
                 )
             return date
 
@@ -109,7 +111,7 @@ class BeastXML:
                 "spec": "Sequence",
                 "taxon": record.id,
                 "totalcount": "4",
-                "value": record.seq,
+                "value": str(record.seq),
             },
         )
         sequence_el.tail = "\n"
@@ -119,4 +121,6 @@ class BeastXML:
         if not out_file:
             out_file = self.file_name
         ET.indent(self.xml, space="\t", level=0)
-        self.xml.write(out_file)
+        with open(out_file, "w") as f:
+            xml_string = ET.tostring(self.xml, pretty_print=True, encoding=str)
+            f.write(xml_string)

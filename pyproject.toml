@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "online-beast"
-version = "0.7.2"
+version = "0.7.3"
 description = ""
 authors = ["Wytamma Wirth <wytamma.wirth@me.com>"]
 readme = "README.md"
@@ -9,9 +9,10 @@ readme = "README.md"
 online-beast = "online_beast.main:app"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.6.2,<4.0"
 typer = {extras = ["all"], version = "^^0.4.0"}
 biopython = "^1.79"
+lxml = "^4.7.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
