@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 from Bio.Align import MultipleSeqAlignment
 
-# import xml.etree.ElementTree as ET
 from lxml import etree as ET
 from xml.etree.ElementTree import ElementTree
 from Bio.SeqRecord import SeqRecord
@@ -98,7 +97,13 @@ class BeastXML:
 
         return sequence_id.split(trait["deliminator"])[trait["group"]]
 
-    def add_sequence(self, record: Seq):
+    def add_sequence(self, record: SeqRecord):
+        if record.id in self.get_sequence_ids():
+            raise ValueError(f"New sequence id must be unique ({record.id})")
+        try:
+            self.alignment.append(record)
+        except ValueError as e:
+            raise e
         if self.date_trait:
             self._add_trait(record.id, "date")
         for trait in self.traits:

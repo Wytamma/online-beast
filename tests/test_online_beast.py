@@ -1,7 +1,7 @@
 import os
 from typer.testing import CliRunner
 
-from online_beast.main import app
+from online_beast import app
 
 runner = CliRunner()
 
