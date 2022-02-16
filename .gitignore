@@ -12,3 +12,5 @@ ebola.xml
 ebola.xml.state
 testGTR.xml
 testGTR.xml.state
+.ipynb_checkpoints/*
+dev.ipynb

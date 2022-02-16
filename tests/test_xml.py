@@ -19,14 +19,14 @@ def test_init():
     assert bx_ebola.traits == []
     assert bx_ebola.date_trait == True
     assert bx_ebola.date_format == "%d/%m/%Y"
-    assert bx_ebola.date_deliminator == "_"
+    assert bx_ebola.date_delimiter == "_"
 
 
 def test_no_date_trait():
     assert bx_GTR.file_name == GTR_file_name
     assert bx_GTR.date_trait == False
     assert bx_GTR.date_format == "%Y-%m-%d"
-    assert bx_GTR.date_deliminator == "_"
+    assert bx_GTR.date_delimiter == "_"
 
 
 def test_get_trait():

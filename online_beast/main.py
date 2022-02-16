@@ -1,6 +1,7 @@
 from pathlib import Path
 from Bio import SeqIO
 from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from Bio.Align import MultipleSeqAlignment
 import typer
 from typing import List, Optional, Tuple
@@ -12,13 +13,19 @@ from .state import StateTree
 app = typer.Typer()
 
 
-def find_closest_sequence(sequences_from_xml: MultipleSeqAlignment, new_sequence: Seq):
+def find_closest_sequence(
+    sequences_from_xml: MultipleSeqAlignment, new_sequence_record: SeqRecord
+):
     max_score = None
     seq_id = None
     with typer.progressbar(sequences_from_xml) as progress:
         for i, sequence in enumerate(progress):
+
+            if sequence.id == new_sequence_record.id:
+                continue
             score = sum(
-                xi != yi for xi, yi in zip(str(sequence.seq), str(new_sequence))
+                xi != yi
+                for xi, yi in zip(str(sequence.seq), str(new_sequence_record.seq))
             )
             if max_score == None:
                 max_score = score
@@ -52,10 +59,10 @@ def main(
     output: Path = None,
     date_trait: bool = True,
     date_format: str = "%Y-%m-%d",
-    date_deliminator: str = "_",
+    date_delimiter: str = "_",
     trait: Optional[List[str]] = typer.Option(
         None,
-        help="Trait information 'traitname deliminator group' string seperated by spaces",
+        help="Trait information 'traitname delimiter group' string seperated by spaces",
     ),
 ):
     if not state_file:
@@ -64,7 +71,7 @@ def main(
     traits = [
         {
             "traitname": t.split(" ")[0],
-            "deliminator": t.split(" ")[1],
+            "delimiter": t.split(" ")[1],
             "group": int(t.split(" ")[2]),
         }
         for t in trait
@@ -75,7 +82,7 @@ def main(
         traits,
         date_trait=date_trait,
         date_format=date_format,
-        date_deliminator=date_deliminator,
+        date_delimiter=date_delimiter,
     )
 
     sequences_to_add = get_sequences_to_add(fasta_file, beast_xml.get_sequence_ids())
@@ -88,10 +95,10 @@ def main(
         typer.echo(f"Adding new sequence: {sequence.id}")
         if len(sequence) != beast_xml.alignment.get_alignment_length():
             raise ValueError("Sequences must all be the same length")
-        closest_tree_node_id, max_score = find_closest_sequence(
-            beast_xml.alignment, sequence.seq
-        )
 
+        closest_tree_node_id, max_score = find_closest_sequence(
+            beast_xml.alignment, sequence
+        )
         sampling_time_delta = 0
         if date_trait:
             closest_tree_node_date = beast_xml.get_trait_data(
@@ -108,13 +115,17 @@ def main(
                 closest_tree_node_dt
             )
 
+        ids = [s.id for s in beast_xml.alignment]
+        ids.append(sequence.id)
+        index = sorted(ids).index(sequence.id)
+
         new_clade = state_tree.graft(
-            closest_tree_node_id, sampling_time_delta=sampling_time_delta
+            closest_tree_node_id, index=index, sampling_time_delta=sampling_time_delta
         )
-        name = new_clade.name
-        new_clade.name = sequence.id
-        state_tree.draw()
-        new_clade.name = name
+        # name = new_clade.name
+        # new_clade.name = f"{sequence.id}"
+        # state_tree.draw()
+        # new_clade.name = name
         beast_xml.add_sequence(sequence)
 
     beast_xml.write(out_file=output)

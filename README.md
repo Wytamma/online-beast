@@ -34,13 +34,13 @@ The online analysis can be visualised in real-time using [Beastiary](https://bea
 
 ![](images/beastiary.png)
 
-Date trait data will be automatically parsed. The format of the date trait data (in the fasta descriptor) can be set with the `--date-format` (default `%Y-%m-%d`) and `--deliminator` (default `_`) flags. If there is no date trait in the xml use the `--no-date-trait` flag.
+Date trait data will be automatically parsed. The format of the date trait data (in the fasta descriptor) can be set with the `--date-format` (default `%Y-%m-%d`) and `--delimiter` (default `_`) flags. If there is no date trait in the xml use the `--no-date-trait` flag.
 
 ```
-online-beast data/ebola.xml data/ebola.fasta --dateformat %d/%m/%Y --date-deliminator _
+online-beast data/ebola.xml data/ebola.fasta --dateformat %d/%m/%Y --date-delimiter _
 ```
 
-If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname deliminator group'` e.g. a string separated by spaces. For example to get the `location` trait from `sample_wuhan_2022-04-05` you would use `--trait 'location _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
+If there is trait data in the XML file you need to specify how to extract it from the fasta descriptor line using the `--trait` flag. The format is `'traitname delimiter group'` e.g. a string separated by spaces. For example to get the `location` trait from `sample_wuhan_2022-04-05` you would use `--trait 'location _ 1'`. The `--trait` flag can be used multiple times to specify multiple traits. 
 
 ```bash
 online-beast covid.xml data/covid.fasta --trait 'location _ 1'

@@ -17,7 +17,7 @@ class BeastXML:
     xml: ElementTree
     date_trait: bool
     date_format: str
-    date_deliminator: str
+    date_delimiter: str
 
     def __init__(
         self,
@@ -25,7 +25,7 @@ class BeastXML:
         traits: List[dict] = [],
         date_trait: bool = True,
         date_format: str = "%Y-%m-%d",
-        date_deliminator: str = "_",
+        date_delimiter: str = "_",
     ):
         self.file_name = file_name
         self.xml = self._load_xml()
@@ -44,7 +44,7 @@ class BeastXML:
                 raise ValueError(f"Could not find 'date' trait in xml..")
         self.date_trait = date_trait
         self.date_format = date_format
-        self.date_deliminator = date_deliminator
+        self.date_delimiter = date_delimiter
 
     def _load_xml(self):
         return ET.parse(str(self.file_name))
@@ -72,6 +72,7 @@ class BeastXML:
                     description="",
                 )
             )
+        msa.sort()
         return msa
 
     def get_sequence_ids(self) -> list:
@@ -80,7 +81,7 @@ class BeastXML:
     def get_trait_data(self, sequence_id, traitname):
         if traitname == "date" and self.date_trait:
             date = None
-            for potential_date in sequence_id.split(self.date_deliminator):
+            for potential_date in sequence_id.split(self.date_delimiter):
                 try:
                     date = datetime.strptime(potential_date, self.date_format).strftime(
                         self.date_format
@@ -89,13 +90,13 @@ class BeastXML:
                     pass
             if not date:
                 raise ValueError(
-                    f"Could not parse date trait with date format '{self.date_format}' and date deliminator '{self.date_deliminator}'"
+                    f"Could not parse date trait with date format '{self.date_format}' and date delimiter '{self.date_delimiter}'"
                 )
             return date
 
         trait = next(t for t in self.traits if t["traitname"] == traitname)
 
-        return sequence_id.split(trait["deliminator"])[trait["group"]]
+        return sequence_id.split(trait["delimiter"])[trait["group"]]
 
     def add_sequence(self, record: SeqRecord):
         if record.id in self.get_sequence_ids():
@@ -121,11 +122,12 @@ class BeastXML:
         )
         sequence_el.tail = "\n"
         data.append(sequence_el)
+        data[:] = sorted(data, key=lambda x: x.get("taxon"))
 
     def write(self, out_file=None) -> None:
         if not out_file:
             out_file = self.file_name
-        ET.indent(self.xml, space="\t", level=0)
+        ET.indent(self.xml, space="    ", level=0)
         with open(out_file, "w") as f:
             xml_string = ET.tostring(self.xml, pretty_print=True, encoding=str)
             f.write(xml_string)
