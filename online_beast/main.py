@@ -57,6 +57,10 @@ def main(
     fasta_file: Path,
     state_file: Path = None,
     output: Path = None,
+    template: bool = typer.Option(
+        False,
+        help="XML file is a beast template. New sequences must be append to the end of the original fasta file.",
+    ),
     date_trait: bool = True,
     date_format: str = "%Y-%m-%d",
     date_delimiter: str = "_",
@@ -84,25 +88,34 @@ def main(
         date_format=date_format,
         date_delimiter=date_delimiter,
     )
-
-    sequences_to_add = get_sequences_to_add(fasta_file, beast_xml.get_sequence_ids())
+    if template:
+        date_trait = False
+        records = list(SeqIO.parse(fasta_file, "fasta"))
+        number_of_tips = state_tree.tree.count_terminals()
+        alignment = MultipleSeqAlignment(records[:-number_of_tips])
+        sequences_to_add = records[number_of_tips:]
+    else:
+        sequences_to_add = get_sequences_to_add(
+            fasta_file, beast_xml.get_sequence_ids()
+        )
 
     if not sequences_to_add:
         typer.echo("No new sequences found in the fasta file.")
         raise typer.Exit(code=1)
 
+    typer.echo(f"Adding {len(sequences_to_add)} new sequences")
     for sequence in sequences_to_add:
         typer.echo(f"Adding new sequence: {sequence.id}")
-        if len(sequence) != beast_xml.alignment.get_alignment_length():
+        if not template:
+            alignment = beast_xml.alignment
+        if len(sequence) != alignment.get_alignment_length():
             raise ValueError("Sequences must all be the same length")
 
-        closest_tree_node_id, max_score = find_closest_sequence(
-            beast_xml.alignment, sequence
-        )
+        closest_tree_node_id, max_score = find_closest_sequence(alignment, sequence)
         sampling_time_delta = 0
         if date_trait:
             closest_tree_node_date = beast_xml.get_trait_data(
-                beast_xml.alignment[closest_tree_node_id].id, traitname="date"
+                alignment[closest_tree_node_id].id, traitname="date"
             )
             closest_tree_node_dt = datetime.strptime(
                 closest_tree_node_date, beast_xml.date_format
@@ -115,7 +128,7 @@ def main(
                 closest_tree_node_dt
             )
 
-        ids = [s.id for s in beast_xml.alignment]
+        ids = [s.id for s in alignment]
         ids.append(sequence.id)
         index = sorted(ids).index(sequence.id)
 
@@ -126,7 +139,15 @@ def main(
         # new_clade.name = f"{sequence.id}"
         # state_tree.draw()
         # new_clade.name = name
-        beast_xml.add_sequence(sequence)
+        if not template:
+            beast_xml.add_sequence(sequence)
+        else:
+            alignment.append(sequence)
 
-    beast_xml.write(out_file=output)
+    if not template:
+        beast_xml.write(out_file=output)
+    # else:
+    #     for c in state_tree.tree.get_terminals():
+    #         c.name = str(int(c.name) + 1)
+    state_tree.draw()
     state_tree.write(out_file=output)
