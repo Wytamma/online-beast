@@ -52,7 +52,7 @@ class BeastXML:
     def _get_first_element_by_attribute(self, attr, value):
         el = self.xml.find(f".//*[@{attr}='{value}']")
         if el is None:
-            raise ValueError(f"Could not find trait with {attr}='{value}'")
+            raise ValueError(f"Could not find element with {attr}='{value}'")
         return el
 
     def _add_trait(self, sequence_id, traitname):
